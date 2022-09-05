@@ -1,0 +1,22 @@
+{
+  "name": "crypto_wallet",
+  "version": "1.0.0",
+  "description": "Fetches data about crypto",
+  "main": "bin/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "James Kinyua",
+  "license": "ISC",
+  "bin": {
+    "get-balances": "./bin/index.js"
+  },
+  "dependencies": {
+    "axios": "^0.26.1",
+    "boxen": "^4.0.0",
+    "chalk": "^2.4.2",
+    "csv-parser": "^3.0.0",
+    "csv-reader": "^1.0.8",
+    "yargs": "^17.4.1"
+  }
+}
