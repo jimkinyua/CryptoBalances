@@ -28,7 +28,7 @@ let get_Latest_USD_Portifolio_Value_For_Each_Token =(token) => {
         });
 
         lineReader.on('line', function (line) {
-            console.log(line)
+            // console.log(line)
             var LineData = {};
             var SplitLineDataArray = line.split(','); //Split the row data using comma 
 
@@ -116,11 +116,8 @@ let get_All_Tokens_USD_Values = (token)=> {
 }
 
 
-let get_Transactions =(token) => {
-    // console.log(token)
+let get_Token_Value_For_Each_Token_By_Date =(date) => {
     var PortifolioValues = [];
-
-        let SelectedTokenTransactions = { "token": token, "amount": 0, "timestamp": 0 };
 
         let BitCoinTransactions = { "token": "BTC", "amount": 0, "timestamp": 0 };
         let EheriumTransactions = { "token": "ETH", "amount": 0, "timestamp": 0 };
@@ -128,7 +125,7 @@ let get_Transactions =(token) => {
 
    
     var lineReader = Reader.createInterface({
-        input: require('fs').createReadStream('E:\\Propine\\test.csv')
+        input: require('fs').createReadStream('E:\\Propine\\transactions.csv')
     });
 
     lineReader.on('line', function (line) {
@@ -141,13 +138,11 @@ let get_Transactions =(token) => {
         LineData.token = SplitLineDataArray[2];
         LineData.amount = SplitLineDataArray[3];
 
-        // console.log(LineData);
-        if(token && LineData.token == token){ //Check If Toke Provided
-            if (LineData.timestamp > SelectedTokenTransactions.timestamp) { 
-                SelectedTokenTransactions.amount = LineData.amount;
-                SelectedTokenTransactions.timestamp = LineData.timestamp;
-            }
-        }else{//No Token Provided
+        //Date to Timestamp
+        let csvTimeStampToDate = convertTimeStampToDate(LineData.timestamp);
+        let normalisedUserDate = normalisedDate(date);
+        if(csvTimeStampToDate == normalisedUserDate){ //Same Date as Date provided by User
+
             if (LineData.token === 'BTC') {
                 //Check if Current Line Timestamp is Greater than What is in Our BitCoinTransactions Object
                 if (LineData.timestamp > BitCoinTransactions.timestamp) {   
@@ -170,37 +165,27 @@ let get_Transactions =(token) => {
                 }
             }
         }
-       
+                 
     }
 
     );
     lineReader.on('close', function () {
 
-        if(token && SelectedTokenTransactions.timestamp <= 0){ //No Toke Found Hence no need to make the API call
-            return console.log('No Coin Found');
-        }
-
-        let ApiResult = get_All_Tokens_USD_Values(token);
+        let ApiResult = get_All_Tokens_USD_Values();
 
         ApiResult.then( (response)=> {
             response.json().then((USD_Values)=>{
 
-                if(token){
-                    // console.log(USD_Values);
-                    SelectedTokenTransactions.amount = SelectedTokenTransactions.amount * USD_Values.USD;
-                    PortifolioValues.push(SelectedTokenTransactions);
-                }else{
-                        //Do the Math to Covert to USD
-                        EheriumTransactions.amount = EheriumTransactions.amount * USD_Values.ETH.USD;
-                        BitCoinTransactions.amount = BitCoinTransactions.amount * USD_Values.BTC.USD;
-                        XRPTransactions.amount = XRPTransactions.amount * USD_Values.XRP.USD;
+                //Do the Math to Covert to USD
+                EheriumTransactions.amount = EheriumTransactions.amount * USD_Values.ETH.USD;
+                BitCoinTransactions.amount = BitCoinTransactions.amount * USD_Values.BTC.USD;
+                XRPTransactions.amount = XRPTransactions.amount * USD_Values.XRP.USD;
 
-                        // console.log(XRPTransactions);
-                        PortifolioValues.push(EheriumTransactions);
-                        PortifolioValues.push(BitCoinTransactions);
-                        PortifolioValues.push(XRPTransactions);
-                }
-            
+                // console.log(XRPTransactions);
+                PortifolioValues.push(EheriumTransactions);
+                PortifolioValues.push(BitCoinTransactions);
+                PortifolioValues.push(XRPTransactions);
+                
             //Log the Latest Portifolio Values to the User
             console.table(PortifolioValues)
             })
@@ -209,11 +194,23 @@ let get_Transactions =(token) => {
     });
 }
 
+let convertTimeStampToDate = (dateToConvert)=>{
+    let date = new Date(dateToConvert *1000);
+    return date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear();
+}
+
+let normalisedDate = (userDate)=>{
+    //Convert it to Timestamp first
+    let timestamp = new Date(userDate).getTime();
+    let nomalisedDate = new Date(timestamp);
+    return nomalisedDate.getDate()+"/"+(nomalisedDate.getMonth()+1)+"/"+nomalisedDate.getFullYear();
+
+}
 
 if (parameters.token){
     get_Latest_USD_Portifolio_Value_For_Each_Token(parameters.token);
 }else if(parameters.date){
-    
+    get_Token_Value_For_Each_Token_By_Date(parameters.date)
 }else{//No Token Provided
     get_Latest_USD_Portifolio_Value_For_Each_Token();
 }
