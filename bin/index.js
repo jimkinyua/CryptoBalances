@@ -116,9 +116,13 @@ let get_All_Tokens_USD_Values = (token)=> {
 }
 
 
-let get_Token_Value_For_Each_Token_By_Date =(date) => {
-    var PortifolioValues = [];
+let get_Token_Value_For_Each_Token_By_Date =(date, token) => {
 
+    var PortifolioValues = [];
+    var FilteredByTokenValues = [];
+
+   
+        let SelectedTokenTransactions = { "token": token, "amount": 0, "timestamp": 0 };
         let BitCoinTransactions = { "token": "BTC", "amount": 0, "timestamp": 0 };
         let EheriumTransactions = { "token": "ETH", "amount": 0, "timestamp": 0 };
         let XRPTransactions = { "token": "XRP", "amount": 0, "timestamp": 0 };
@@ -186,8 +190,17 @@ let get_Token_Value_For_Each_Token_By_Date =(date) => {
                 PortifolioValues.push(BitCoinTransactions);
                 PortifolioValues.push(XRPTransactions);
                 
-            //Log the Latest Portifolio Values to the User
-            console.table(PortifolioValues)
+                if(token){//If token has been Provided and has been founnd, Filter with that token
+                    PortifolioValues.filter((item)=> {
+                        if(item.token == token){
+                            FilteredByTokenValues.push(item);
+                        }
+                    });
+
+                } else{
+                    FilteredByTokenValues = PortifolioValues;
+                }
+                console.table(FilteredByTokenValues)
             })
         }).catch((err)=> {console.log(err.message)})
 
@@ -199,6 +212,7 @@ let convertTimeStampToDate = (dateToConvert)=>{
     return date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear();
 }
 
+
 let normalisedDate = (userDate)=>{
     //Convert it to Timestamp first
     let timestamp = new Date(userDate).getTime();
@@ -207,10 +221,18 @@ let normalisedDate = (userDate)=>{
 
 }
 
-if (parameters.token){
+if (parameters.token && parameters.date === undefined){//Only Token Provided
+    console.log("Only Token Provided");
     get_Latest_USD_Portifolio_Value_For_Each_Token(parameters.token);
-}else if(parameters.date){
+}else if(parameters.date && parameters.token === undefined){//Only Token Provided
+    console.log("Only Date Provided");
     get_Token_Value_For_Each_Token_By_Date(parameters.date)
-}else{//No Token Provided
+}
+else if(parameters.date && parameters.token){
+    console.log("Only Date and Token Provided");
+    get_Token_Value_For_Each_Token_By_Date(parameters.date, parameters.token)
+}
+else{//No Token Provided
+    console.log("No Params");
     get_Latest_USD_Portifolio_Value_For_Each_Token();
 }
